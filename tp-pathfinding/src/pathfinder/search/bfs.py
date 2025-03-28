@@ -70,4 +70,3 @@ class BreadthFirstSearch:
 
                     # Add the new node to the frontier
                     frontier.add(new_node)
-
