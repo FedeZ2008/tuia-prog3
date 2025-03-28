@@ -23,5 +23,7 @@ class BreadthFirstSearch:
         
         # Add the node to the explored dictionary
         explored[node.state] = True
-        
+
         return NoSolution(explored)
+        
+        
