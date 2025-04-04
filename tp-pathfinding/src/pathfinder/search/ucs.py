@@ -22,11 +22,11 @@ class UniformCostSearch:
         explored = {} 
         
         # Add the node to the explored dictionary
-        explored[node.state] = True
+        explored[node.state] = node.cost
         
         # Return if the node contains a goal state
-        if node.state == grid.end:
-            return Solution(node, explored)
+        #if node.state == grid.end:
+         #   return Solution(node, explored)
 
         # Initialize the frontier with the initial node
         # In this example, the frontier is a queue
@@ -43,35 +43,40 @@ class UniformCostSearch:
             # Remove a node from the frontier
             node = frontier.pop()
 
+            if node.state == grid.end:
+                return Solution(node, explored)
+
             # BFS
             successors = grid.get_neighbours(node.state)
 
             # Itera sobre el diccionario succesors y desempaqueta cada par clave/valor
             for key, value in successors.items():
-
+                
+                #get cost
+                new_cost = grid.get_cost(value) + grid.get_cost(node)
                 # Get the successor
                 new_state = value
 
                 # Check if the successor is not reached
-                if new_state not in explored:
+                if new_state not in explored or new_cost < explored[new_state]:
 
                     # Initialize the son node
                     new_node = Node("", new_state,
-                                    node.cost + grid.get_cost(new_state),
+                                    new_cost,
                                     parent=node, action=value)
 
                     # Mark the successor as reached
-                    explored[new_state] = True
+                    explored[new_state] = new_cost
 
                     # Return if the node contains a goal state
                     # In this example, the goal test is run
                     # before adding a new node to the frontier
-                    if new_state == grid.end:
-                        return Solution(new_node, explored)
+                    #if new_state == grid.end:
+                     #   return Solution(new_node, explored)
 
                     # Add the new node to the frontier
                     #if grid.get_cost(new_node.state) <= node.cost:
-                    frontier.add(new_node, node.cost)
+                    frontier.add(new_node, new_cost)
                     #else:
                         #frontier.add(new_node)
                     

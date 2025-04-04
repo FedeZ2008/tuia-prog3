@@ -20,9 +20,7 @@ class DepthFirstSearch:
 
         # Initialize the explored dictionary to be empty
         explored = {} 
-        
-        # Add the node to the explored dictionary
-        explored[node.state] = True
+    
 
         # Return if the node contains a goal state
         if node.state == grid.end:
@@ -42,6 +40,9 @@ class DepthFirstSearch:
             # Remove a node from the frontier
             node = frontier.remove()
 
+            if node.state in explored:
+                continue
+            explored[node.state] = True
             # BFS
             successors = grid.get_neighbours(node.state)
 
@@ -58,9 +59,6 @@ class DepthFirstSearch:
                     new_node = Node("", new_state,
                                     node.cost + grid.get_cost(new_state),
                                     parent=node, action=value)
-
-                    # Mark the successor as reached
-                    explored[new_state] = True
 
                     # Return if the node contains a goal state
                     # In this example, the goal test is run
