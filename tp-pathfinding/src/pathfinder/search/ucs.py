@@ -3,7 +3,6 @@ from ..models.frontier import PriorityQueueFrontier
 from ..models.solution import NoSolution, Solution
 from ..models.node import Node
 
-
 class UniformCostSearch:
     @staticmethod
     def search(grid: Grid) -> Solution:
@@ -24,12 +23,9 @@ class UniformCostSearch:
         # Add the node to the explored dictionary
         explored[node.state] = node.cost
         
-        # Return if the node contains a goal state
-        #if node.state == grid.end:
-         #   return Solution(node, explored)
 
         # Initialize the frontier with the initial node
-        # In this example, the frontier is a queue
+        # In this example, the frontier is a priority queue
         frontier = PriorityQueueFrontier()
         frontier.add(node)
 
@@ -41,19 +37,19 @@ class UniformCostSearch:
                 return NoSolution(explored)
 
             # Remove a node from the frontier
-            node = frontier.pop()
+            current_node = frontier.pop()
 
-            if node.state == grid.end:
-                return Solution(node, explored)
+            if current_node.state == grid.end:
+                return Solution(current_node, explored)
 
-            # BFS
-            successors = grid.get_neighbours(node.state)
+            # UCS
+            successors = grid.get_neighbours(current_node.state)
 
             # Itera sobre el diccionario succesors y desempaqueta cada par clave/valor
             for key, value in successors.items():
                 
                 #get cost
-                new_cost = grid.get_cost(value) + grid.get_cost(node)
+                new_cost = current_node.cost + grid.get_cost(value)
                 # Get the successor
                 new_state = value
 
@@ -61,24 +57,12 @@ class UniformCostSearch:
                 if new_state not in explored or new_cost < explored[new_state]:
 
                     # Initialize the son node
-                    new_node = Node("", new_state,
-                                    new_cost,
-                                    parent=node, action=value)
+                    new_node = Node("", state=new_state,
+                                    cost=new_cost,
+                                    parent=current_node, action=key)
 
                     # Mark the successor as reached
                     explored[new_state] = new_cost
 
-                    # Return if the node contains a goal state
-                    # In this example, the goal test is run
-                    # before adding a new node to the frontier
-                    #if new_state == grid.end:
-                     #   return Solution(new_node, explored)
-
                     # Add the new node to the frontier
-                    #if grid.get_cost(new_node.state) <= node.cost:
-                    frontier.add(new_node, new_cost)
-                    #else:
-                        #frontier.add(new_node)
-                    
-
-
+                    frontier.add(new_node)
