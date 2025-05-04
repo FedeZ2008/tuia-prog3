@@ -146,5 +146,86 @@ class HillClimbingReset(LocalSearch):
 
 class Tabu(LocalSearch):
     """Algoritmo de busqueda tabu."""
+    
+    def __init__(self, no_improve_limit: int = 100) -> None:
+        """Construye una instancia del algoritmo de búsqueda tabú con diversificación.
 
-    # COMPLETAR
+        Argumentos:
+        ==========
+        tabu_tenure: int
+            Tamaño máximo de la lista tabú (tenor de tabú).
+        max_iters: int
+            Número máximo de iteraciones permitidas.
+        no_improve_limit: int
+            Número de iteraciones sin mejora para activar el reinicio.
+        """
+        super().__init__()
+        self.tabu_list = []  # Lista tabú implementada como lista simple
+        self.no_improve_limit = no_improve_limit  # Límite para reinicios
+        self.no_improve_count = 0  # Contador de iteraciones sin mejora
+        self.frequency_memory = {}  # Memoria de frecuencia como diccionario
+        self.reinicio = 0  # Contador de reinicios
+
+    def solve(self, problem: OptProblem):
+        """Resuelve un problema de optimizacion con ascension de colinas.
+
+        Argumentos:
+        ==========
+        problem: OptProblem
+            un problema de optimizacion
+        """
+        # Inicio del reloj
+        start = time()
+
+        # Arrancamos del estado inicial
+        actual = problem.init
+        value = problem.obj_val(problem.init)
+
+        best_tour = None
+        best_value = float('-inf')
+        act_prev = None
+        
+        while self.no_improve_count < self.no_improve_limit:
+            # Buscamos la acción que genera el sucesor con mayor valor objetivo
+            act, succ_val = problem.max_action(actual, tabu_list=self.tabu_list)
+
+            # Diversificación: Reinicio si no hay mejora
+            if self.reinicio < 10:
+                actual_tuple = tuple(actual)
+                if actual_tuple not in self.frequency_memory:
+                    self.frequency_memory[actual_tuple] = 0
+                self.frequency_memory[actual_tuple] += 1
+                if self.no_improve_count < (self.no_improve_limit - 1):
+                    self.reinicio += 1
+                    actual_tuple = min(self.frequency_memory, key = self.frequency_memory.get)
+                    actual = list(actual_tuple)
+                    value = problem.obj_val(actual)
+                    self.niters += 1
+                    continue
+
+            # Si estamos en un máximo local, terminamos esta iteración
+            if succ_val <= value:
+                self.tabu_list.append(act_prev)  # Agregar acción a la lista tabú
+                self.no_improve_count += 1
+                self.niters += 1
+                               
+                if value > best_value:
+                    best_tour = actual
+                    best_value = value
+                    self.no_improve_count = 0  # Reiniciar contador
+
+                actual = problem.result(actual, act_prev)
+                value = problem.obj_val(actual)
+                continue
+            
+            # Sino, nos movemos al sucesor
+            actual = problem.result(actual, act)
+            value = succ_val
+            act_prev = act # Guardar la acción anterior
+            self.niters += 1
+
+        self.tour = best_tour
+        self.value = best_value
+        end = time()
+        self.time = end-start
+        return
