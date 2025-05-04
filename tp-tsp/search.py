@@ -80,10 +80,69 @@ class HillClimbing(LocalSearch):
 
 
 class HillClimbingReset(LocalSearch):
-    """Algoritmo de ascension de colinas con reinicio aleatorio."""
+    """Algoritmo de ascensión de colinas con reinicio aleatorio.
 
-    # COMPLETAR
+    Este algoritmo realiza múltiples búsquedas locales de ascensión de colinas,
+    reiniciando desde un estado aleatorio cada vez que alcanza un óptimo local.
+    """
 
+    def __init__(self, max_restarts: int = 10) -> None:
+        """Construye una instancia del algoritmo con reinicio aleatorio.
+
+        Argumentos:
+        ==========
+        max_restarts: int
+            Número máximo de reinicios aleatorios permitidos.
+        """
+        super().__init__()
+        self.max_restarts = max_restarts  # Número máximo de reinicios
+
+    def solve(self, problem: OptProblem):
+        """Resuelve un problema de optimización con reinicio aleatorio.
+
+        Argumentos:
+        ==========
+        problem: OptProblem
+            Un problema de optimización
+        """
+        # Inicio del reloj
+        start = time()
+
+        # Variables para almacenar la mejor solución global
+        best_tour = None
+        best_value = float('-inf')
+
+        for restart in range(self.max_restarts):
+            # Reinicio aleatorio o estado inicial
+            if restart == 0:
+                actual = problem.init
+            else:
+                actual = problem.random_reset()
+
+            value = problem.obj_val(actual)
+
+            while True:
+                # Buscamos la acción que genera el sucesor con mayor valor objetivo
+                act, succ_val = problem.max_action(actual)
+
+                # Si estamos en un máximo local, terminamos esta iteración
+                if succ_val <= value:
+                    break
+
+                # Sino, nos movemos al sucesor
+                actual = problem.result(actual, act)
+                value = succ_val
+                self.niters += 1
+
+            # Actualizamos la mejor solución global si encontramos una mejor
+            if value > best_value:
+                best_tour = actual
+                best_value = value
+
+        # Guardamos la mejor solución global
+        self.tour = best_tour
+        self.value = best_value
+        self.time = time() - start
 
 class Tabu(LocalSearch):
     """Algoritmo de busqueda tabu."""
