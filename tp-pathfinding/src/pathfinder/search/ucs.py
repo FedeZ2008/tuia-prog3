@@ -45,7 +45,7 @@ class UniformCostSearch:
             # UCS
             successors = grid.get_neighbours(current_node.state)
 
-            # Itera sobre el diccionario succesors y desempaqueta cada par clave/valor
+            # Iterate over the dictionary `successors` and unpack each key/value pair
             for key, value in successors.items():
                 
                 #get cost

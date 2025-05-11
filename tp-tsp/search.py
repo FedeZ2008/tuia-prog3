@@ -147,28 +147,24 @@ class HillClimbingReset(LocalSearch):
 class Tabu(LocalSearch):
     """Algoritmo de busqueda tabu."""
 
-    def __init__(self, no_improve_limit: int = 100, tabu_limit = 50) -> None:
-        """Construye una instancia del algoritmo de búsqueda tabú con diversificación.
+    def __init__(self, no_improve_limit: int = 100, tabu_limit: int = 50) -> None:
+        """Construye una instancia del algoritmo de búsqueda tabú con criterio de aspiración.
 
         Argumentos:
         ==========
-        tabu_tenure: int
+        tabu_limit: int
             Tamaño máximo de la lista tabú (tenor de tabú).
-        max_iters: int
-            Número máximo de iteraciones permitidas.
         no_improve_limit: int
             Número de iteraciones sin mejora para activar el reinicio.
         """
         super().__init__()
         self.tabu_list = []  # Lista tabú implementada como lista simple
-        self.tabu_limit = tabu_limit
+        self.tabu_limit = tabu_limit # Límite de tamaño de la lista tabú
         self.no_improve_limit = no_improve_limit  # Límite para reinicios
         self.no_improve_count = 0  # Contador de iteraciones sin mejora
-        #self.frequency_memory = {}  # Memoria de frecuencia como diccionario
-        #self.reinicio = 0  # Contador de reinicios
 
     def solve(self, problem: OptProblem):
-        """Resuelve un problema de optimizacion con ascension de colinas.
+        """Resuelve un problema de optimizacion con búsqueda tabu.
 
         Argumentos:
         ==========
@@ -184,6 +180,7 @@ class Tabu(LocalSearch):
         best_tour = actual
         best_value = value
 
+        # Ciclo principal de búsqueda
         while self.no_improve_count < self.no_improve_limit:
             # Buscamos la acción que genera el sucesor con mayor valor objetivo
             act, succ_val = problem.max_action(actual, tabu_list=self.tabu_list)
@@ -195,12 +192,14 @@ class Tabu(LocalSearch):
             # Si se supera el límite de la lista tabú, eliminar el elemento más antiguo
             if self.tabu_limit < len(self.tabu_list):
                 self.tabu_list.pop(0)
-
+            
+            # Si la nueva solución es mejor, actualiza el estado
             if value < succ_val:
                 self.tabu_list.append(act)  # Agregar acción a la lista tabú
                 actual = problem.result(actual, act)
                 value = succ_val
                 self.niters += 1
+                # Actualizamos la mejor solución global si encontramos una mejor
                 if value > best_value:
                     best_value = value
                     best_tour = actual
@@ -213,6 +212,7 @@ class Tabu(LocalSearch):
             self.no_improve_count += 1
             self.niters += 1
 
+        # Guardamos la mejor solución global
         self.tour = best_tour
         self.value = best_value
         end = time()

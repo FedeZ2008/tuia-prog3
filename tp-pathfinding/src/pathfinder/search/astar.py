@@ -48,7 +48,7 @@ class AStarSearch:
             # A*
             successors = grid.get_neighbours(current_node.state)
 
-            # Itera sobre el diccionario succesors y desempaqueta cada par clave/valor
+            # Iterate over the dictionary `successors` and unpack each key/value pair
             for key, value in successors.items():
                 
                 #get cost
@@ -73,10 +73,7 @@ class AStarSearch:
 
     @staticmethod
     def heuristic(a: tuple[int, int], b: tuple[int, int]) -> float:
-        """Calcula la distancia Manhattan entre dos puntos.
-        Puedes experimentar con otras heurísticas como la distancia euclídea.
+        """
+        Calculate the Manhattan distance between two points.
         """
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-        # Otra heurística posible (distancia euclídea):
-        # return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
