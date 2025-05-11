@@ -146,8 +146,8 @@ class HillClimbingReset(LocalSearch):
 
 class Tabu(LocalSearch):
     """Algoritmo de busqueda tabu."""
-    
-    def __init__(self, no_improve_limit: int = 100) -> None:
+
+    def __init__(self, no_improve_limit: int = 100, tabu_limit = 50) -> None:
         """Construye una instancia del algoritmo de búsqueda tabú con diversificación.
 
         Argumentos:
@@ -161,10 +161,11 @@ class Tabu(LocalSearch):
         """
         super().__init__()
         self.tabu_list = []  # Lista tabú implementada como lista simple
+        self.tabu_limit = tabu_limit
         self.no_improve_limit = no_improve_limit  # Límite para reinicios
         self.no_improve_count = 0  # Contador de iteraciones sin mejora
-        self.frequency_memory = {}  # Memoria de frecuencia como diccionario
-        self.reinicio = 0  # Contador de reinicios
+        #self.frequency_memory = {}  # Memoria de frecuencia como diccionario
+        #self.reinicio = 0  # Contador de reinicios
 
     def solve(self, problem: OptProblem):
         """Resuelve un problema de optimizacion con ascension de colinas.
@@ -180,52 +181,39 @@ class Tabu(LocalSearch):
         # Arrancamos del estado inicial
         actual = problem.init
         value = problem.obj_val(problem.init)
+        best_tour = actual
+        best_value = value
 
-        best_tour = None
-        best_value = float('-inf')
-        act_prev = None
-        
         while self.no_improve_count < self.no_improve_limit:
             # Buscamos la acción que genera el sucesor con mayor valor objetivo
             act, succ_val = problem.max_action(actual, tabu_list=self.tabu_list)
-
-            # Diversificación: Reinicio si no hay mejora
-            if self.reinicio < 10:
-                actual_tuple = tuple(actual)
-                if actual_tuple not in self.frequency_memory:
-                    self.frequency_memory[actual_tuple] = 0
-                self.frequency_memory[actual_tuple] += 1
-                if self.no_improve_count < (self.no_improve_limit - 1):
-                    self.reinicio += 1
-                    actual_tuple = min(self.frequency_memory, key = self.frequency_memory.get)
-                    actual = list(actual_tuple)
-                    value = problem.obj_val(actual)
-                    self.niters += 1
-                    continue
-
-            # Si estamos en un máximo local, terminamos esta iteración
-            if succ_val <= value:
-                self.tabu_list.append(act_prev)  # Agregar acción a la lista tabú
-                self.no_improve_count += 1
-                self.niters += 1
-                               
-                if value > best_value:
-                    best_tour = actual
-                    best_value = value
-                    self.no_improve_count = 0  # Reiniciar contador
-
-                actual = problem.result(actual, act_prev)
-                value = problem.obj_val(actual)
-                continue
             
+            # Aplicar criterio de aspiración: Ignorar tabú si mejora la mejor solución
+            if act in self.tabu_list and succ_val > best_value:
+                self.tabu_list.remove(act)  # Remover de la lista tabú si cumple el criterio de aspiración
+            
+            # Si se supera el límite de la lista tabú, eliminar el elemento más antiguo
+            if self.tabu_limit < len(self.tabu_list):
+                self.tabu_list.pop(0)
+
+            if value < succ_val:
+                self.tabu_list.append(act)  # Agregar acción a la lista tabú
+                actual = problem.result(actual, act)
+                value = succ_val
+                self.niters += 1
+                if value > best_value:
+                    best_value = value
+                    best_tour = actual
+                    self.no_improve_count = 0
+                continue
+
             # Sino, nos movemos al sucesor
             actual = problem.result(actual, act)
             value = succ_val
-            act_prev = act # Guardar la acción anterior
+            self.no_improve_count += 1
             self.niters += 1
 
         self.tour = best_tour
         self.value = best_value
         end = time()
         self.time = end-start
-        return
